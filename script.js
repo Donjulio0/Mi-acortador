@@ -21,33 +21,79 @@ const db = getFirestore(app);
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-if (id) {
+const body = document.body;
+
+if (!id) {
+    body.innerHTML = "<h2 style='color: red;'>ID no proporcionado en la URL</h2>";
+} else {
     const docRef = doc(db, "Enlaces", id);
-    getDoc(docRef).then((docSnap) => {
-        if (docSnap.exists()) {
+
+    getDoc(docRef)
+        .then((docSnap) => {
+            if (!docSnap.exists()) {
+                body.innerHTML = "<h2 style='color: red;'>Enlace no encontrado</h2>";
+                return;
+            }
+
             const data = docSnap.data();
             const destino = data.Destino;
             const clics = data.Clics || 0;
 
-            if (!destino || typeof destino !== 'string') {
-                document.body.innerHTML = "<h2>URL de destino inválida</h2>";
+            if (!destino || typeof destino !== "string" || !destino.startsWith("http")) {
+                body.innerHTML = "<h2 style='color: red;'>URL de destino inválida</h2>";
                 return;
             }
 
-            // Mostrar mensaje mientras carga el anuncio
-            document.body.innerHTML = "<h2>Redirigiendo en 5 segundos...</h2>";
+            // Mostrar UI de redirección
+            mostrarTemporizador(destino, docRef, clics);
+        })
+        .catch((error) => {
+            console.error("Error al obtener el documento:", error);
+            body.innerHTML = "<h2 style='color: red;'>Error al cargar el enlace</h2>";
+        });
+}
 
-            setTimeout(() => {
-                // Incrementar el contador de clics
-                updateDoc(docRef, { Clics: clics + 1 })
-                    .then(() => {
-                        // Redirigir a la URL
-                        window.location.href = destino;
-                    })
-                    .catch((error) => {
-                        console.error("Error al actualizar los clics:", error);
-                        document.body.innerHTML = "<h2>Error al registrar el clic</h2>";
-                    });
-            }, 50000); // Espera de 5 segundos
+function mostrarTemporizador(destino, docRef, clics) {
+    // Crear elementos
+    body.innerHTML = `
+        <div style="text-align: center; font-family: sans-serif; margin-top: 20vh;">
+            <h2>Redirigiendo en <span id="contador">5</span> segundos...</h2>
+            <button id="saltarBtn" disabled style="padding: 10px 20px; font-size: 16px; cursor: not-allowed; background-color: #ccc; border: none; border-radius: 5px;">
+                Saltar anuncio
+            </button>
+        </div>
+    `;
 
-        
+    const contador = document.getElementById("contador");
+    const saltarBtn = document.getElementById("saltarBtn");
+    let segundos = 5;
+
+    const intervalo = setInterval(() => {
+        segundos--;
+        contador.textContent = segundos;
+
+        if (segundos <= 0) {
+            clearInterval(intervalo);
+            saltarBtn.disabled = false;
+            saltarBtn.textContent = "Ir al sitio";
+            saltarBtn.style.backgroundColor = "#007bff";
+            saltarBtn.style.color = "#fff";
+            saltarBtn.style.cursor = "pointer";
+
+            // Agrega listener al botón
+            saltarBtn.addEventListener("click", () => {
+                updateDoc(docRef, { Clics: clics + 1 }).then(() => {
+                    window.location.href = destino;
+                }).catch((error) => {
+                    console.error("Error al actualizar los clics:", error);
+                    body.innerHTML = "<h2>Error al registrar el clic</h2>";
+                });
+            });
+
+            // También redirige automáticamente
+            updateDoc(docRef, { Clics: clics + 1 }).then(() => {
+                window.location.href = destino;
+            });
+        }
+    }, 15000);
+}
