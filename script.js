@@ -95,5 +95,5 @@ function mostrarTemporizador(destino, docRef, clics) {
                 window.location.href = destino;
             });
         }
-    }, 15000);
+    }, 1000);
 }
