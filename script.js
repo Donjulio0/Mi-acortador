@@ -26,42 +26,37 @@ if (id) {
     getDoc(docRef).then((docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
-            console.log("📦 Datos obtenidos:", data);
-
-            // Compatibilidad con 'Destino' o 'destino'
-            let destino = data.Destino || data.destino;
+            const destino = data.Destino;
             const clics = data.Clics || 0;
 
-            if (!destino) {
-                document.body.innerHTML = "<h2>Error: Enlace sin destino válido</h2>";
+            if (!destino || typeof destino !== 'string') {
+                document.body.innerHTML = "<h2>URL de destino inválida</h2>";
                 return;
             }
 
-            // Limpiar comillas al inicio y final si existen
-            destino = destino.replace(/^"(.*)"$/, "$1");
+            // Mostrar mensaje mientras carga el anuncio
+            document.body.innerHTML = "<h2>Redirigiendo en 5 segundos...</h2>";
 
-            // Mostrar mensaje de espera
-            document.body.innerHTML = "<h2>Espera unos segundos...</h2>";
-
-            // Esperar 5 segundos (o el tiempo que quieras)
             setTimeout(() => {
-                // Aumentar el contador de clics
+                // Incrementar el contador de clics
                 updateDoc(docRef, { Clics: clics + 1 })
-                    .then(() => console.log("✅ Contador actualizado"))
-                    .catch(err => console.error("❌ Error actualizando contador:", err));
+                    .then(() => {
+                        // Redirigir a la URL
+                        window.location.href = destino;
+                    })
+                    .catch((error) => {
+                        console.error("Error al actualizar los clics:", error);
+                        document.body.innerHTML = "<h2>Error al registrar el clic</h2>";
+                    });
+            }, 5000); // Espera de 5 segundos
 
-                console.log("🔗 Redirigiendo a:", destino);
-
-                // Redirigir al destino
-                window.location.href = destino;
-            }, 5000); // <-- Aquí puedes cambiar el tiempo en milisegundos
         } else {
-            document.body.innerHTML = "<h2>❌ Enlace no encontrado</h2>";
+            document.body.innerHTML = "<h2>Enlace no encontrado</h2>";
         }
     }).catch(error => {
-        console.error("🔥 Error obteniendo el enlace:", error);
-        document.body.innerHTML = "<h2>⚠️ Error al cargar el enlace</h2>";
+        console.error("Error obteniendo el documento:", error);
+        document.body.innerHTML = "<h2>Error al cargar el enlace</h2>";
     });
 } else {
-    document.body.innerHTML = "<h2>❌ ID no especificado en la URL</h2>";
+    document.body.innerHTML = "<h2>ID no especificado en la URL</h2>";
 }
