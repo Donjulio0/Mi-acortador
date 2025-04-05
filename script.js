@@ -37,14 +37,13 @@ if (!id) {
 
             const data = docSnap.data();
             const destino = data.Destino;
-            const clics = data.Clics || 0;
+            let clics = parseInt(data.Clics) || 0;
 
             if (!destino || typeof destino !== "string" || !destino.startsWith("http")) {
                 body.innerHTML = "<h2 style='color: red;'>URL de destino inválida</h2>";
                 return;
             }
 
-            // Mostrar UI de redirección
             mostrarTemporizador(destino, docRef, clics);
         })
         .catch((error) => {
@@ -80,20 +79,29 @@ function mostrarTemporizador(destino, docRef, clics) {
             saltarBtn.style.color = "#fff";
             saltarBtn.style.cursor = "pointer";
 
-            // Agrega listener al botón
+            // Evento del botón
             saltarBtn.addEventListener("click", () => {
-                updateDoc(docRef, { Clics: clics + 1 }).then(() => {
-                    window.location.href = destino;
-                }).catch((error) => {
-                    console.error("Error al actualizar los clics:", error);
-                    body.innerHTML = "<h2>Error al registrar el clic</h2>";
-                });
+                console.log("Botón clicado, incrementando clics...");
+                updateDoc(docRef, { Clics: clics + 1 })
+                    .then(() => {
+                        window.location.href = destino;
+                    })
+                    .catch((error) => {
+                        console.error("Error al registrar clic desde botón:", error);
+                        body.innerHTML = "<h2>Error al registrar el clic</h2>";
+                    });
             });
 
-            // También redirige automáticamente
-            updateDoc(docRef, { Clics: clics + 1 }).then(() => {
-                window.location.href = destino;
-            });
+            // Redirección automática
+            console.log("Redirección automática, incrementando clics...");
+            updateDoc(docRef, { Clics: clics + 1 })
+                .then(() => {
+                    window.location.href = destino;
+                })
+                .catch((error) => {
+                    console.error("Error al registrar clic automático:", error);
+                    body.innerHTML = "<h2>Error al registrar el clic</h2>";
+                });
         }
     }, 1000);
 }
