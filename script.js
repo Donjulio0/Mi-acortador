@@ -57,7 +57,7 @@ function mostrarTemporizador(destino, docRef, clics) {
     // Crear elementos
     body.innerHTML = `
         <div style="text-align: center; font-family: sans-serif; margin-top: 20vh;">
-            <h2>Redirigiendo en <span id="contador">5</span> segundos...</h2>
+            <h2>Redirigiendo en <span id="contador">15</span> segundos...</h2>
             <button id="saltarBtn" disabled style="padding: 10px 20px; font-size: 16px; cursor: not-allowed; background-color: #ccc; border: none; border-radius: 5px;">
                 Saltar anuncio
             </button>
@@ -66,7 +66,7 @@ function mostrarTemporizador(destino, docRef, clics) {
 
     const contador = document.getElementById("contador");
     const saltarBtn = document.getElementById("saltarBtn");
-    let segundos = 5;
+    let segundos = 15;
 
     const intervalo = setInterval(() => {
         segundos--;
