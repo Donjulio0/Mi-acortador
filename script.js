@@ -25,27 +25,43 @@ if (id) {
     const docRef = doc(db, "Enlaces", id);
     getDoc(docRef).then((docSnap) => {
         if (docSnap.exists()) {
-            const destino = docSnap.data().Destino;
-            const clics = docSnap.data().Clics || 0;
+            const data = docSnap.data();
+            console.log("📦 Datos obtenidos:", data);
 
-            // Mostrar mensaje mientras carga el anuncio
+            // Compatibilidad con 'Destino' o 'destino'
+            let destino = data.Destino || data.destino;
+            const clics = data.Clics || 0;
+
+            if (!destino) {
+                document.body.innerHTML = "<h2>Error: Enlace sin destino válido</h2>";
+                return;
+            }
+
+            // Limpiar comillas al inicio y final si existen
+            destino = destino.replace(/^"(.*)"$/, "$1");
+
+            // Mostrar mensaje de espera
             document.body.innerHTML = "<h2>Espera unos segundos...</h2>";
 
-            // Simular la espera de un anuncio (puedes agregar código real de anuncios aquí)
+            // Esperar 5 segundos (o el tiempo que quieras)
             setTimeout(() => {
-                // Incrementar el contador de clics en Firebase
-                updateDoc(docRef, { Clics: clics + 1 });
+                // Aumentar el contador de clics
+                updateDoc(docRef, { Clics: clics + 1 })
+                    .then(() => console.log("✅ Contador actualizado"))
+                    .catch(err => console.error("❌ Error actualizando contador:", err));
 
-                // Redirigir a la URL de destino
+                console.log("🔗 Redirigiendo a:", destino);
+
+                // Redirigir al destino
                 window.location.href = destino;
-            }, 50000); // Espera 5 segundos antes de redirigir
+            }, 5000); // <-- Aquí puedes cambiar el tiempo en milisegundos
         } else {
-            document.body.innerHTML = "<h2>Enlace no encontrado</h2>";
+            document.body.innerHTML = "<h2>❌ Enlace no encontrado</h2>";
         }
     }).catch(error => {
-        console.error("Error obteniendo el enlace:", error);
-        document.body.innerHTML = "<h2>Error al cargar el enlace</h2>";
+        console.error("🔥 Error obteniendo el enlace:", error);
+        document.body.innerHTML = "<h2>⚠️ Error al cargar el enlace</h2>";
     });
 } else {
-    document.body.innerHTML = "<h2>ID no especificado en la URL</h2>";
+    document.body.innerHTML = "<h2>❌ ID no especificado en la URL</h2>";
 }
