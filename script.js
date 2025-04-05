@@ -79,29 +79,20 @@ function mostrarTemporizador(destino, docRef, clics) {
             saltarBtn.style.color = "#fff";
             saltarBtn.style.cursor = "pointer";
 
-            // Evento del botón
-            saltarBtn.addEventListener("click", () => {
-                console.log("Botón clicado, incrementando clics...");
-                updateDoc(docRef, { Clics: clics + 1 })
-                    .then(() => {
-                        window.location.href = destino;
-                    })
-                    .catch((error) => {
-                        console.error("Error al registrar clic desde botón:", error);
-                        body.innerHTML = "<h2>Error al registrar el clic</h2>";
-                    });
-            });
-
-            // Redirección automática
-            console.log("Redirección automática, incrementando clics...");
-            updateDoc(docRef, { Clics: clics + 1 })
-                .then(() => {
-                    window.location.href = destino;
-                })
-                .catch((error) => {
-                    console.error("Error al registrar clic automático:", error);
-                    body.innerHTML = "<h2>Error al registrar el clic</h2>";
-                });
+            // Simula clic automático
+            saltarBtn.click();
         }
     }, 1000);
+
+    // Solo esta función actualizará Firestore
+    saltarBtn.addEventListener("click", () => {
+        updateDoc(docRef, { Clics: clics + 1 })
+            .then(() => {
+                window.location.href = destino;
+            })
+            .catch((error) => {
+                console.error("Error al registrar el clic:", error);
+                body.innerHTML = "<h2>Error al registrar el clic</h2>";
+            });
+    });
 }
