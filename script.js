@@ -48,15 +48,6 @@ if (id) {
                         console.error("Error al actualizar los clics:", error);
                         document.body.innerHTML = "<h2>Error al registrar el clic</h2>";
                     });
-            }, 5000); // Espera de 5 segundos
+            }, 50000); // Espera de 5 segundos
 
-        } else {
-            document.body.innerHTML = "<h2>Enlace no encontrado</h2>";
-        }
-    }).catch(error => {
-        console.error("Error obteniendo el documento:", error);
-        document.body.innerHTML = "<h2>Error al cargar el enlace</h2>";
-    });
-} else {
-    document.body.innerHTML = "<h2>ID no especificado en la URL</h2>";
-}
+        
