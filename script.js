@@ -1,6 +1,6 @@
 // Importar Firebase y Firestore
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -17,9 +17,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Obtener ID de la URL
+// Obtener ID y referencia de la URL
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
+const ref = params.get("ref") || "desconocido";
 
 const body = document.body;
 
@@ -29,7 +30,7 @@ if (!id) {
     const docRef = doc(db, "Enlaces", id);
 
     getDoc(docRef)
-        .then((docSnap) => {
+        .then(async (docSnap) => {
             if (!docSnap.exists()) {
                 body.innerHTML = "<h2 style='color: red;'>Enlace no encontrado</h2>";
                 return;
@@ -44,6 +45,10 @@ if (!id) {
                 return;
             }
 
+            // ✅ Capturar info del visitante y guardarla
+            await guardarVisita(id, ref);
+
+            // ⏱️ Mostrar temporizador
             mostrarTemporizador(destino, docRef, clics);
         })
         .catch((error) => {
@@ -52,8 +57,58 @@ if (!id) {
         });
 }
 
+// Guardar visita en Firestore
+async function guardarVisita(id, ref) {
+    try {
+        const res = await fetch("https://ipwho.is/");
+        const data = await res.json();
+
+        const ip = data.ip || "desconocida";
+        const pais = data.country || "desconocido";
+        const ciudad = data.city || "desconocido";
+        const navegador = navigator.userAgent || "desconocido";
+        const sistema = navigator.platform || "desconocido";
+
+        const adblock = await detectarAdBlock();
+
+        const visita = {
+            ip,
+            pais,
+            ciudad,
+            navegador,
+            sistema,
+            adblock,
+            timestamp: serverTimestamp(),
+            ref
+        };
+
+        const visitasRef = collection(db, "Enlaces", id, "Visitas");
+        await addDoc(visitasRef, visita);
+    } catch (err) {
+        console.error("Error al guardar visita:", err);
+    }
+}
+
+// Detectar AdBlock
+function detectarAdBlock() {
+    return new Promise((resolve) => {
+        const bait = document.createElement("div");
+        bait.className = "adsbox";
+        bait.style.position = "absolute";
+        bait.style.height = "1px";
+        bait.style.width = "1px";
+        bait.style.left = "-10000px";
+        document.body.appendChild(bait);
+
+        setTimeout(() => {
+            resolve(!bait.offsetParent);
+            bait.remove();
+        }, 100);
+    });
+}
+
+// Mostrar temporizador y redireccionar
 function mostrarTemporizador(destino, docRef, clics) {
-    // Crear elementos
     body.innerHTML = `
         <div style="text-align: center; font-family: sans-serif; margin-top: 20vh;">
             <h2>Redirigiendo en <span id="contador">15</span> segundos...</h2>
@@ -79,12 +134,10 @@ function mostrarTemporizador(destino, docRef, clics) {
             saltarBtn.style.color = "#fff";
             saltarBtn.style.cursor = "pointer";
 
-            // Simula clic automático
-            saltarBtn.click();
+            saltarBtn.click(); // Click automático
         }
     }, 1000);
 
-    // Solo esta función actualizará Firestore
     saltarBtn.addEventListener("click", () => {
         updateDoc(docRef, { Clics: clics + 1 })
             .then(() => {
